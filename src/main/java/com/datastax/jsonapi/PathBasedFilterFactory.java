@@ -71,10 +71,10 @@ public class PathBasedFilterFactory {
      * @return Filter for the given node
      */
     private static TokenFilter buildFilterFromInclusionTree(StringNode node) {
-        Map<String, StringNode> childNodes = node.getChildren();
-        if (childNodes.isEmpty()) {
+        if (node.isEmpty()) {
             return TokenFilter.INCLUDE_ALL;
         }
+        Map<String, StringNode> childNodes = node.getChildren();
         // Optimize single-path case
         if (childNodes.size() == 1) {
             Map.Entry<String, StringNode> entry = childNodes.entrySet().iterator().next();
