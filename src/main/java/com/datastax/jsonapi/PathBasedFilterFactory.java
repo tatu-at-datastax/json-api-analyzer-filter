@@ -13,35 +13,57 @@ public class PathBasedFilterFactory {
 
     private final static Pattern DOT_SEPARATOR = Pattern.compile("\\.");
 
+    private final static TokenFilter EMPTY_DOC_FILTER = IncludeNothingFilter.instance;
+
+    /**
+     * Main factory method for constructing {@link TokenFilter} for including
+     * contents under given paths. Paths are passed as comma-separated list
+     * of dotted-notation paths: for example
+     *<code>
+     *  a.b, c.d
+     *</code>
+     * would include properties "b" under "a", and "d" under "c", in document like
+     *<code>
+     *  {
+     *      "a" : {
+     *          "b" : 3
+     *      },
+     *      "b" : false,
+     *      "c" : {
+     *          "d" : "x"
+     *      }
+     *  }
+     *</code>
+     */
     public static TokenFilter filterForPaths(String csPaths) {
         csPaths = csPaths.trim();
         // Empty String -> match nothing; caller needs to check
         if (csPaths.isEmpty()) {
-            return null;
+            return EMPTY_DOC_FILTER;
         }
         return filterForPaths(Arrays.asList(COMMA_SEPARATOR.split(csPaths)));
     }
 
     public static TokenFilter filterForPaths(List<String> csPaths) {
         // First: build a minimal inclusion tree, needed for construction of filters
-        StringNode roots = buildInclusionTree(csPaths);
-        if (roots == null) {
-            return null;
+        InclusionTreeNode roots = buildInclusionTree(csPaths);
+        if (roots.isEmpty()) {
+            return EMPTY_DOC_FILTER;
         }
         return buildFilterFromInclusionTree(roots);
     }
 
-    private static StringNode buildInclusionTree(List<String> paths)
+    private static InclusionTreeNode buildInclusionTree(List<String> paths)
     {
-        StringNode root = new StringNode();
+        InclusionTreeNode root = new InclusionTreeNode();
         for (String path : paths) {
             path = path.trim();
             if (path.isEmpty()) {
                 continue;
             }
-            StringNode curr = root;
+            InclusionTreeNode curr = root;
             for (String segment : DOT_SEPARATOR.split(path)) {
-                StringNode next = curr.find(segment);
+                InclusionTreeNode next = curr.find(segment);
                 // If next doesn't exist, create it
                 if (next == null) {
                     curr = curr.add(segment);
@@ -56,10 +78,6 @@ public class PathBasedFilterFactory {
             // Make sure end of the path is marked as leaf
             curr.clear();
         }
-        // Could still be empty if all paths were empty
-        if (root.isEmpty()) {
-            return null;
-        }
         return root;
     }
 
@@ -70,19 +88,19 @@ public class PathBasedFilterFactory {
      *
      * @return Filter for the given node
      */
-    private static TokenFilter buildFilterFromInclusionTree(StringNode node) {
+    private static TokenFilter buildFilterFromInclusionTree(InclusionTreeNode node) {
         if (node.isEmpty()) {
             return TokenFilter.INCLUDE_ALL;
         }
-        Map<String, StringNode> childNodes = node.getChildren();
+        Map<String, InclusionTreeNode> childNodes = node.getChildren();
         // Optimize single-path case
         if (childNodes.size() == 1) {
-            Map.Entry<String, StringNode> entry = childNodes.entrySet().iterator().next();
+            Map.Entry<String, InclusionTreeNode> entry = childNodes.entrySet().iterator().next();
             return new PathBasedFilter.SinglePathFilter(entry.getKey(),
                     buildFilterFromInclusionTree(entry.getValue()));
         }
         Map<String, TokenFilter> filters = new HashMap<>();
-        for (Map.Entry<String, StringNode> entry : childNodes.entrySet()) {
+        for (Map.Entry<String, InclusionTreeNode> entry : childNodes.entrySet()) {
             filters.put(entry.getKey(), buildFilterFromInclusionTree(entry.getValue()));
         }
         return new PathBasedFilter.MultiPathFilter(filters);
@@ -93,28 +111,28 @@ public class PathBasedFilterFactory {
      * from a root node. Order of creating paths doesn't matter; longer paths
      * will be pruned regardless of ordering.
      */
-    static class StringNode {
-        private Map<String, StringNode> next;
+    static class InclusionTreeNode {
+        private Map<String, InclusionTreeNode> next;
 
-        public StringNode() { }
+        public InclusionTreeNode() { }
 
         public boolean isEmpty() {
             return next == null;
         }
 
-        public Map<String, StringNode> getChildren() {
+        public Map<String, InclusionTreeNode> getChildren() {
             return next;
         }
 
-        public StringNode find(String key) {
+        public InclusionTreeNode find(String key) {
             return (next == null) ? null : next.get(key);
         }
 
-        public StringNode add(String key) {
+        public InclusionTreeNode add(String key) {
             if (next == null) {
                 next = new HashMap<>();
             }
-            StringNode node = new StringNode();
+            InclusionTreeNode node = new InclusionTreeNode();
             next.put(key, node);
             return node;
         }
@@ -122,5 +140,29 @@ public class PathBasedFilterFactory {
         public void clear() {
             next = null;
         }
+    }
+
+    /**
+     * Filter used to indicate that results should be empty: that is, token stream
+     * with no tokens.
+     */
+    static class IncludeNothingFilter extends TokenFilter {
+        public final static IncludeNothingFilter instance = new IncludeNothingFilter();
+
+        public TokenFilter filterStartObject() { return null; }
+
+        public TokenFilter filterStartArray() { return null; }
+
+        @Override
+        public TokenFilter includeProperty(String name) { return null; }
+
+        @Override
+        public TokenFilter includeElement(int index) { return null; }
+
+        @Override
+        public TokenFilter includeRootValue(int index) { return null; }
+
+        @Override
+        protected boolean _includeScalar() { return false; }
     }
 }

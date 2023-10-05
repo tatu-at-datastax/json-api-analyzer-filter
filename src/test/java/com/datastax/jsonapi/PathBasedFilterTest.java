@@ -16,8 +16,8 @@ public class PathBasedFilterTest {
     private final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
-    public void testSimpleInclusion() throws Exception {
-        verifyInclusion("{\"a\":1,\"b\":2,\"c\":3}", "a",
+    public void testSimpleObjectInclusion() throws Exception {
+        verifyInclusion("{'a':1,'b':2,'c':3}", "a",
                 "{'a':1}",
                 "1 ");
         verifyInclusion("{'a':{'b':1,'c':true,'x':false},'d':'xyz'}", "a.c",
@@ -29,6 +29,37 @@ public class PathBasedFilterTest {
         verifyInclusion("{'a':{'b':1,'c':true,'x':false},'d':'xyz'}", "d, a.b",
                         "{'a':{'b':1},'d':'xyz'}",
                 "1 xyz ");
+    }
+
+    @Test
+    public void testSimpleArrayInclusion() throws Exception {
+        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "arr",
+                "{'arr':['abc','def']}",
+                "abc def ");
+        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "a, ",
+                "{'a':'123'}",
+                "123 ");
+        verifyInclusion("{'a':{'b':{'arr': ['abc', 'def']}}, 'z':3 }", "a.b ",
+                "{'a':{'b':{'arr':['abc','def']}}}",
+                "abc def ");
+    }
+
+    @Test
+    public void testMissingInclusion() throws Exception {
+        verifyInclusion("{'a':1,'b':2,'c':3}", " ",
+                "",
+                "");
+
+        verifyInclusion("{'a':1,'b':2,'c':3}", ", ",
+                "",
+                "");
+    }
+
+    @Test
+    public void testEmptyInclusion() throws Exception {
+        verifyInclusion("{'a':1,'b':2,'c':3}", " x, y",
+                "",
+                "");
     }
 
     private void verifyInclusion(String json, String paths, String expJson, String expText) throws Exception{
@@ -59,7 +90,7 @@ public class PathBasedFilterTest {
         StringWriter sw = new StringWriter();
         try (JsonParser p = MAPPER.createParser(json)) {
             try (JsonParser fp = new FilteringParserDelegate(p, filter,
-                    TokenFilter.Inclusion.ONLY_INCLUDE_ALL, true)) {
+                    TokenFilter.Inclusion.INCLUDE_ALL_AND_PATH, true)) {
                 while (fp.nextToken() != null) {
                     switch (fp.currentToken()) {
                     case VALUE_STRING:
