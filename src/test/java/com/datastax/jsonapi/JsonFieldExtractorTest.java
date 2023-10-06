@@ -14,6 +14,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JsonFieldExtractorTest {
     private final ObjectMapper MAPPER = new ObjectMapper();
 
+    /*
+    /**********************************************************
+    /* Basic Object tests
+    /**********************************************************
+     */
+
     @Test
     public void testSimpleObjectInclusion() throws Exception {
         verifyInclusion("{'a':1,'b':2,'c':3}", "a",
@@ -30,18 +36,11 @@ public class JsonFieldExtractorTest {
                 "1 xyz ");
     }
 
-    @Test
-    public void testSimpleArrayInclusion() throws Exception {
-        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "arr",
-                "{'arr':['abc','def']}",
-                "abc def ");
-        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "a, ",
-                "{'a':'123'}",
-                "123 ");
-        verifyInclusion("{'a':{'b':{'arr': ['abc', 'def']}}, 'z':3 }", "a.b ",
-                "{'a':{'b':{'arr':['abc','def']}}}",
-                "abc def ");
-    }
+    /*
+    /**********************************************************
+    /* Object, with missing paths
+    /**********************************************************
+     */
 
     @Test
     public void testMissingInclusion() throws Exception {
@@ -62,6 +61,19 @@ public class JsonFieldExtractorTest {
     }
 
     @Test
+    public void testEmptyViaTooLong() throws Exception {
+        verifyInclusion("{'a':1,'b':2,'c':3}", "a.x",
+                "",
+                "");
+    }
+
+    /*
+    /**********************************************************
+    /* Object, overlapping paths
+    /**********************************************************
+     */
+
+    @Test
     public void testLongerPathLast() throws Exception {
         verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b, b.y",
                 "{'b':{'x':1,'y':2}}",
@@ -74,6 +86,43 @@ public class JsonFieldExtractorTest {
                 "{'b':{'x':1,'y':2}}",
                 "1 2 ");
     }
+
+    /*
+    /**********************************************************
+    /* Array/nested Array tests
+    /**********************************************************
+     */
+
+    @Test
+    public void testSimpleArrayInclusion() throws Exception {
+        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "arr",
+                "{'arr':['abc','def']}",
+                "abc def ");
+        verifyInclusion("{'a':'123','arr': ['abc', 'def']}", "a, ",
+                "{'a':'123'}",
+                "123 ");
+        verifyInclusion("{'a':{'b':{'arr': ['abc', 'def']}}, 'z':3 }", "a.b ",
+                "{'a':{'b':{'arr':['abc','def']}}}",
+                "abc def ");
+    }
+
+    @Test
+    public void testNestedInArrayInclusion() throws Exception {
+        verifyInclusion("{'arr': [{'name':'Bob','age':20},{'name':'Jack','age':30}]}",
+                "arr.name",
+                "{'arr':[{'name':'Bob'},{'name':'Jack'}]}",
+                "Bob Jack ");
+        verifyInclusion("{'arr': [{'name':'Bob','age':20},{'name':'Jack','age':30}]}",
+                "arr.age",
+                "{'arr':[{'age':20},{'age':30}]}",
+                "20 30 ");
+    }
+
+    /*
+    /**********************************************************
+    /* Helper methods
+    /**********************************************************
+     */
 
     private void verifyInclusion(String json, String paths, String expJson, String expText) throws Exception{
         assertThat(filterAsJson(json, paths)).isEqualTo(a2q(expJson));
