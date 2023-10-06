@@ -2,7 +2,6 @@ package com.datastax.jsonapi;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.core.filter.FilteringParserDelegate;
 import com.fasterxml.jackson.core.filter.TokenFilter;
@@ -47,6 +46,12 @@ public class JsonFieldExtractor {
         }
     }
 
+    public String extractAsString(byte[] json) throws IOException {
+        try (JsonParser p = jsonFactory.createParser(json)) {
+            return _extractAsString(p, json.length);
+        }
+    }
+
     public String extractAsString(ByteBuffer json) throws IOException {
         try (InputStream in = new ByteBufferBackedInputStream(json)) {
             try (JsonParser p = jsonFactory.createParser(in)) {
@@ -61,6 +66,12 @@ public class JsonFieldExtractor {
         }
     }
 
+    public byte[] extractAsBytes(byte[] json) throws IOException {
+        try (JsonParser p = jsonFactory.createParser(json)) {
+            return _extractAsBytes(p, json.length);
+        }
+    }
+
     public byte[] extractAsBytes(ByteBuffer json) throws IOException {
         try (InputStream in = new ByteBufferBackedInputStream(json)) {
             try (JsonParser p = jsonFactory.createParser(in)) {
@@ -69,6 +80,7 @@ public class JsonFieldExtractor {
         }
     }
 
+    // Method mostly useful for testing purposes
     public JsonParser extractingParser(String json) throws IOException {
         JsonParser p = jsonFactory.createParser(json);
         JsonParser fp = new FilteringParserDelegate(p, filter,

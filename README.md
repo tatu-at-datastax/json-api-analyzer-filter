@@ -39,3 +39,17 @@ String toIndex = extr.extractAsString(json);
 
 assertThat(toIndex).isEqualTo("Bob Burger 555-123-4567 "); // note trailing space
 ```
+
+## Caching
+
+Instances of `JsonFeidlExtractorFactory` and `JsonFieldExtractor` are thread-safe and can be shared between threads.
+They should be cached as much as possible: for former a Singleton is enough, and for latter, a size-bound
+Caffeine cache keyed by field definitions is recommended.
+
+## Implementation
+
+Internally the implementation is based on Jackson's `JsonParser` configured with a `JsonToken` constructed from
+inclusion path definition.
+As such read performance should be close to that of basic JSON decoding with little extra overhead.
+Output aggregation is simple text aggregation using `StringWriter`, although if output is needed as `ByteBuffer`,
+additional UTF-8 encoding overhead is incurred.
