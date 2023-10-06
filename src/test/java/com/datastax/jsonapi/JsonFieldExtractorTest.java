@@ -61,6 +61,16 @@ public class JsonFieldExtractorTest {
                 "");
     }
 
+    @Test
+    public void testOverlappingInclusion() throws Exception {
+        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b.x, b",
+                "{'b':{'x':1,'y':2}}",
+                "1 2 ");
+        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b, b.y",
+                "{'b':{'x':1,'y':2}}",
+                "1 2 ");
+    }
+
     private void verifyInclusion(String json, String paths, String expJson, String expText) throws Exception{
         assertThat(filterAsJson(json, paths)).isEqualTo(a2q(expJson));
         assertThat(filterAsText(json, paths)).isEqualTo(expText);
