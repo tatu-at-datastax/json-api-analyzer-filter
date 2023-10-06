@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class PathBasedFilterFactory {
+class PathBasedFilterFactory {
     private final static Pattern COMMA_SEPARATOR = Pattern.compile(",");
 
     private final static Pattern DOT_SEPARATOR = Pattern.compile("\\.");

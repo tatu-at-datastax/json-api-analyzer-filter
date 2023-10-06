@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.filter.TokenFilter;
 
 import java.util.Map;
 
-public class PathBasedFilter extends TokenFilter {
+class PathBasedFilter extends TokenFilter {
     /**
      * Specialized implementation that matches just a single path through JSON Object.
      */

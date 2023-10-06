@@ -2,9 +2,8 @@ package com.datastax.jsonapi;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.filter.FilteringParserDelegate;
-import com.fasterxml.jackson.core.filter.TokenFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -12,7 +11,7 @@ import java.io.StringWriter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PathBasedFilterTest {
+public class JsonFieldExtractorTest {
     private final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
@@ -69,15 +68,13 @@ public class PathBasedFilterTest {
 
     private String filterAsJson(String json, String paths) throws IOException {
         json = a2q(json);
-        TokenFilter filter = PathBasedFilterFactory.filterForPaths(paths);
+        JsonFieldExtractor extr = JsonFieldExtractorFactory.construct(MAPPER)
+                .buildExtractor(paths);
         StringWriter sw = new StringWriter();
-        try (JsonParser p = MAPPER.createParser(json)) {
-            try (JsonParser fp = new FilteringParserDelegate(p, filter,
-                    TokenFilter.Inclusion.INCLUDE_ALL_AND_PATH, true)) {
-                try (JsonGenerator g = MAPPER.createGenerator(sw)) {
-                    while (fp.nextToken() != null) {
-                        g.copyCurrentStructure(fp);
-                    }
+        try (JsonParser p = extr.extractingParser(json)) {
+            try (JsonGenerator g = MAPPER.createGenerator(sw)) {
+                while (p.nextToken() != null) {
+                    g.copyCurrentStructure(p);
                 }
             }
         }
@@ -85,26 +82,10 @@ public class PathBasedFilterTest {
     }
 
     private String filterAsText(String json, String paths) throws IOException {
-        json = a2q(json);
-        TokenFilter filter = PathBasedFilterFactory.filterForPaths(paths);
-        StringWriter sw = new StringWriter();
-        try (JsonParser p = MAPPER.createParser(json)) {
-            try (JsonParser fp = new FilteringParserDelegate(p, filter,
-                    TokenFilter.Inclusion.INCLUDE_ALL_AND_PATH, true)) {
-                while (fp.nextToken() != null) {
-                    switch (fp.currentToken()) {
-                    case VALUE_STRING:
-                    case VALUE_NUMBER_FLOAT:
-                    case VALUE_NUMBER_INT:
-                    case VALUE_FALSE:
-                    case VALUE_TRUE:
-                        sw.append(fp.getText()).append(' ');
-                        break;
-                    }
-                }
-            }
-        }
-        return sw.toString();
+        json = a2q(json); // just so tests can use single quotes
+        JsonFieldExtractor extr = JsonFieldExtractorFactory.construct(MAPPER)
+                .buildExtractor(paths);
+        return extr.extractAsString(json);
     }
 
     protected static String a2q(String json) {
