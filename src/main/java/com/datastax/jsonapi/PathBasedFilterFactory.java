@@ -67,12 +67,13 @@ class PathBasedFilterFactory {
                 // If next doesn't exist, create it
                 if (next == null) {
                     curr = curr.add(segment);
-                } else if (next.isEmpty()) {
-                    // If next exists and is leaf, we're done (current path longer than existing match)
-                    break;
                 } else {
-                    // Otherwise, keep going
                     curr = next;
+                    if (next.isEmpty()) {
+                        // If next exists and is leaf, we're done (current path longer than existing match)
+                        break;
+                    }
+                    // Otherwise, keep going
                 }
             }
             // Make sure end of the path is marked as leaf

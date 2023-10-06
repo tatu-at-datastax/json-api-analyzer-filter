@@ -62,11 +62,15 @@ public class JsonFieldExtractorTest {
     }
 
     @Test
-    public void testOverlappingInclusion() throws Exception {
-        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b.x, b",
+    public void testLongerPathLast() throws Exception {
+        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b, b.y",
                 "{'b':{'x':1,'y':2}}",
                 "1 2 ");
-        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b, b.y",
+    }
+
+    @Test
+    public void testLongerPathFirst() throws Exception {
+        verifyInclusion("{'a':1,'b':{'x':1,'y':2},'c':true}", "b.x, b",
                 "{'b':{'x':1,'y':2}}",
                 "1 2 ");
     }
