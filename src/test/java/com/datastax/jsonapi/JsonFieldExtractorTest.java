@@ -60,8 +60,9 @@ public class JsonFieldExtractorTest {
                 "");
     }
 
+    // Test to verify that longer path won't match shorter one
     @Test
-    public void testEmptyViaTooLong() throws Exception {
+    public void testEmptyViaLongerShouldNotMatch() throws Exception {
         verifyInclusion("{'a':1,'b':2,'c':3}", "a.x",
                 "",
                 "");

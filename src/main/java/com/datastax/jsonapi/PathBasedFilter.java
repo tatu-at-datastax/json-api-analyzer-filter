@@ -4,7 +4,23 @@ import com.fasterxml.jackson.core.filter.TokenFilter;
 
 import java.util.Map;
 
+/**
+ * Base class for {@link TokenFilter} implementations used for filtering
+ * intermediate tree levels (for leaves we use "include all" filter).
+ * Needs to match path going through, and exclude possible scalar values
+ * (so that "a.x.y" will NOT match "a.x", but will match "a.x.y.z", for example).
+ */
 class PathBasedFilter extends TokenFilter {
+    /**
+     * Different from default implementation as we should NOT allow
+     * scalar values to be included at intermediate (branch) level.
+     */
+    @Override
+    protected boolean _includeScalar() {
+        return false;
+    }
+
+
     /**
      * Specialized implementation that matches just a single path through JSON Object.
      */
