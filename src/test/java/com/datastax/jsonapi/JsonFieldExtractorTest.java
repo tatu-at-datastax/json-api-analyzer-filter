@@ -88,6 +88,14 @@ public class JsonFieldExtractorTest {
                 "1 2 ");
     }
 
+    @Test
+    public void testMultiLevelMatching() throws Exception {
+        verifyInclusion("{'first':123,'a':{'b':{'x':{'z':'value'}},'c':true},'y':2}",
+                "a, a.b, a.b.x",
+                "{'a':{'b':{'x':{'z':'value'}},'c':true}}",
+                "value true ");
+    }
+
     /*
     /**********************************************************
     /* Array/nested Array tests
