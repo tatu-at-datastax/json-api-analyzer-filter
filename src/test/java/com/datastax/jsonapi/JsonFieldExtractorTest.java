@@ -8,12 +8,16 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JsonFieldExtractorTest {
     private final ObjectMapper MAPPER = new ObjectMapper();
 
+    private final JsonFieldExtractorFactory EXTRACTOR_FACTORY
+            = JsonFieldExtractorFactory.construct(MAPPER);
     /*
     /**********************************************************
     /* Basic Object tests
@@ -129,6 +133,22 @@ public class JsonFieldExtractorTest {
 
     /*
     /**********************************************************
+    /* Non-JSON validation
+    /**********************************************************
+     */
+
+    @Test
+    public void testNonJSONHandling() throws Exception {
+        JsonFieldExtractor extr = EXTRACTOR_FACTORY.buildExtractor("a,b");
+
+        assertThat(extr.extractAsString("not json")).isEqualTo(Optional.empty());
+        final byte[] docBytes = "Some text".getBytes("UTF-8");
+        assertThat(extr.extractAsString(docBytes)).isEqualTo(Optional.empty());
+        assertThat(extr.extractAsString(ByteBuffer.wrap(docBytes))).isEqualTo(Optional.empty());
+    }
+
+    /*
+    /**********************************************************
     /* Helper methods
     /**********************************************************
      */
@@ -140,10 +160,9 @@ public class JsonFieldExtractorTest {
 
     private String filterAsJson(String json, String paths) throws IOException {
         json = a2q(json);
-        JsonFieldExtractor extr = JsonFieldExtractorFactory.construct(MAPPER)
-                .buildExtractor(paths);
+        JsonFieldExtractor extr = EXTRACTOR_FACTORY.buildExtractor(paths);
         StringWriter sw = new StringWriter();
-        try (JsonParser p = extr.extractingParser(json)) {
+        try (JsonParser p = extr.extractingParser(json).get()) {
             try (JsonGenerator g = MAPPER.createGenerator(sw)) {
                 while (p.nextToken() != null) {
                     g.copyCurrentStructure(p);
@@ -155,9 +174,8 @@ public class JsonFieldExtractorTest {
 
     private String filterAsText(String json, String paths) throws IOException {
         json = a2q(json); // just so tests can use single quotes
-        JsonFieldExtractor extr = JsonFieldExtractorFactory.construct(MAPPER)
-                .buildExtractor(paths);
-        return extr.extractAsString(json);
+        JsonFieldExtractor extr = EXTRACTOR_FACTORY.buildExtractor(paths);
+        return extr.extractAsString(json).get();
     }
 
     protected static String a2q(String json) {

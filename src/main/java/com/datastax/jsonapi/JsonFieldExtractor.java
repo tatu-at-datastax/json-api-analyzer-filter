@@ -12,7 +12,20 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
+/**
+ * Main class that handles extraction of JSON field contents from JSON documents,
+ * to be used for textual analysis. Instances are created via {@link JsonFieldExtractorFactory};
+ * uses {@link PathBasedFilterFactory} for constructing {@link PathBasedFilter} used
+ * for actual filtering of streaming JSON content.
+ *<p>
+ * Content passed as possible JSON is checked to see whether it starts with expected start marker
+ * (START-OBJECT, {@code { }}, or START-ARRAY, {@code [ ]}), and if not, extraction is not attempted
+ * and {@link Optional#empty()} is returned. Otherwise {@link Optional} of extract result is
+ * returned.
+ *</p>
+ */
 public class JsonFieldExtractor {
     private final JsonFactory jsonFactory;
     private final TokenFilter filter;
@@ -40,52 +53,73 @@ public class JsonFieldExtractor {
     /**********************************************************
      */
 
-    public String extractAsString(String json) throws IOException {
+    public Optional<String> extractAsString(String json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (JsonParser p = jsonFactory.createParser(json)) {
-            return _extractAsString(p, json.length());
+            return Optional.of(_extractAsString(p, json.length()));
         }
     }
 
-    public String extractAsString(byte[] json) throws IOException {
+    public Optional<String> extractAsString(byte[] json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (JsonParser p = jsonFactory.createParser(json)) {
-            return _extractAsString(p, json.length);
+            return Optional.of(_extractAsString(p, json.length));
         }
     }
 
-    public String extractAsString(ByteBuffer json) throws IOException {
+    public Optional<String> extractAsString(ByteBuffer json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (InputStream in = new ByteBufferBackedInputStream(json)) {
             try (JsonParser p = jsonFactory.createParser(in)) {
-                return _extractAsString(p, json.remaining());
+                return Optional.of(_extractAsString(p, json.remaining()));
             }
         }
     }
 
-    public byte[] extractAsBytes(String json) throws IOException {
+    public Optional<byte[]> extractAsBytes(String json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (JsonParser p = jsonFactory.createParser(json)) {
-            return _extractAsBytes(p, json.length());
+            return Optional.of(_extractAsBytes(p, json.length()));
         }
     }
 
-    public byte[] extractAsBytes(byte[] json) throws IOException {
+    public Optional<byte[]> extractAsBytes(byte[] json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (JsonParser p = jsonFactory.createParser(json)) {
-            return _extractAsBytes(p, json.length);
+            return Optional.of(_extractAsBytes(p, json.length));
         }
     }
 
-    public byte[] extractAsBytes(ByteBuffer json) throws IOException {
+    public Optional<byte[]> extractAsBytes(ByteBuffer json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         try (InputStream in = new ByteBufferBackedInputStream(json)) {
             try (JsonParser p = jsonFactory.createParser(in)) {
-                return _extractAsBytes(p, json.remaining());
+                return Optional.of(_extractAsBytes(p, json.remaining()));
             }
         }
     }
 
     // Method mostly useful for testing purposes
-    public JsonParser extractingParser(String json) throws IOException {
+    public Optional<JsonParser> extractingParser(String json) throws IOException {
+        if (!_hasJson(json)) {
+            return Optional.empty();
+        }
         JsonParser p = jsonFactory.createParser(json);
         JsonParser fp = new FilteringParserDelegate(p, filter,
                 TokenFilter.Inclusion.INCLUDE_ALL_AND_PATH, true);
-        return fp;
+        return Optional.of(fp);
     }
 
     /*
@@ -93,6 +127,30 @@ public class JsonFieldExtractor {
     /* Internal helper methods
     /**********************************************************
      */
+
+    private boolean _hasJson(String json) {
+        if (json.isEmpty()) {
+            return false;
+        }
+        char c = json.charAt(0);
+        return (c == '{') || (c == '[');
+    }
+
+    private boolean _hasJson(byte[] json) {
+        if (json.length == 0) {
+            return false;
+        }
+        char c = (char) json[0];
+        return (c == '{') || (c == '[');
+    }
+
+    private boolean _hasJson(ByteBuffer bb) {
+        if (!bb.hasRemaining()) {
+            return false;
+        }
+        char c = (char) bb.get(bb.position());
+        return (c == '{') || (c == '[');
+    }
 
     private String _extractAsString(JsonParser p, int jsonLength) throws IOException {
         StringWriter sw = new StringWriter(estimateResultLength(jsonLength));
