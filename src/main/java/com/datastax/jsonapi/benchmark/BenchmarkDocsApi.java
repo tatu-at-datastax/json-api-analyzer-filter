@@ -24,7 +24,9 @@ public class BenchmarkDocsApi
 {
     private ObjectMapper MAPPER;
 
-    private JsonFieldExtractor docsApiExtractor;
+    private JsonFieldExtractor docsApiExtractorSmall;
+
+    private JsonFieldExtractor docsApiExtractorBig;
 
     private byte[] exampleDocJson;
 
@@ -43,11 +45,13 @@ public class BenchmarkDocsApi
         }
         JsonFieldExtractorFactory extractorFactory
                 = JsonFieldExtractorFactory.construct(MAPPER);
-        docsApiExtractor = extractorFactory.buildExtractor(
+        docsApiExtractorSmall = extractorFactory.buildExtractor(
                 "products.electronics.Pixel_3a, quiz.sport.q1.answer");
+        docsApiExtractorBig = extractorFactory.buildExtractor(
+                "quiz.nests, products.food");
 
         // Verify that we can extract the fields we want
-        String text = docsApiExtractor.extractAsString(exampleDocJson).get().trim();
+        String text = docsApiExtractorSmall.extractAsString(exampleDocJson).get().trim();
         final String EXP = "Huston Rocket Pixel Google 3a 600";
         if (!text.equals(EXP)) {
             throw new IllegalStateException("Invalid extracted text: expected '"+EXP+"', got '"
@@ -76,8 +80,14 @@ public class BenchmarkDocsApi
     }
 
     @Benchmark
-    public int jsonReadAndExtract(Blackhole bh) throws IOException {
-        String text = docsApiExtractor.extractAsString(exampleDocJson).get();
+    public int jsonReadAndExtractTiny(Blackhole bh) throws IOException {
+        String text = docsApiExtractorSmall.extractAsString(exampleDocJson).get();
+        return _validate(bh, text.length());
+    }
+
+    @Benchmark
+    public int jsonReadAndExtractMost(Blackhole bh) throws IOException {
+        String text = docsApiExtractorBig.extractAsString(exampleDocJson).get();
         return _validate(bh, text.length());
     }
 
