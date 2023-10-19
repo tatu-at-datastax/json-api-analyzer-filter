@@ -122,6 +122,14 @@ public class JsonFieldExtractor {
         return Optional.of(fp);
     }
 
+    // Method mostly useful for testing purposes
+    public JsonParser extractingParser(InputStream in) throws IOException {
+        JsonParser p = jsonFactory.createParser(in);
+        JsonParser fp = new FilteringParserDelegate(p, filter,
+                TokenFilter.Inclusion.INCLUDE_ALL_AND_PATH, true);
+        return fp;
+    }
+
     /*
     /**********************************************************
     /* Internal helper methods
@@ -152,7 +160,7 @@ public class JsonFieldExtractor {
         return (c == '{') || (c == '[');
     }
 
-    private String _extractAsString(JsonParser p, int jsonLength) throws IOException {
+    String _extractAsString(JsonParser p, int jsonLength) throws IOException {
         StringWriter sw = new StringWriter(estimateResultLength(jsonLength));
         try (JsonParser fp = new FilteringParserDelegate(p, filter,
                 TokenFilter.Inclusion.ONLY_INCLUDE_ALL, true)) {

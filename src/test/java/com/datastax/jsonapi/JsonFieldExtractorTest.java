@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -129,6 +130,34 @@ public class JsonFieldExtractorTest {
                 "arr.age",
                 "{'arr':[{'age':20},{'age':30}]}",
                 "20 30 ");
+    }
+
+    /*
+    /**********************************************************
+    /* Bigger document test
+    /**********************************************************
+     */
+
+    @Test
+    public void testDocsApiExampleDoc() throws Exception
+    {
+        JsonFieldExtractor extr = EXTRACTOR_FACTORY.buildExtractor("products.food.Pear");
+        try (InputStream in = getClass().getResourceAsStream("/jmh/docsapi-example.json")) {
+            try (JsonParser p = extr.extractingParser(in)) {
+                String str = extr._extractAsString(p, 1000);
+                assertThat(str).isEqualTo("pear 0.89 ");
+            }
+        }
+
+        extr = EXTRACTOR_FACTORY.buildExtractor(
+                "products.food.Apple, products.food.Orange ");
+        try (InputStream in = getClass().getResourceAsStream("/jmh/docsapi-example.json")) {
+            try (JsonParser p = extr.extractingParser(in)) {
+                String str = extr._extractAsString(p, 1000);
+                assertThat(str).isEqualTo("apple 0.99 100100010101001 orange 600.01 ");
+            }
+        }
+
     }
 
     /*
