@@ -53,3 +53,29 @@ inclusion path definition.
 As such read performance should be close to that of basic JSON decoding with little extra overhead.
 Output aggregation is simple text aggregation using `StringWriter`, although if output is needed as `ByteBuffer`,
 additional UTF-8 encoding overhead is incurred.
+
+## Benchmarking
+
+Project includes [JMH](https://github.com/openjdk/jmh) based micro-benchmarks for comparing performance of extraction
+to that of basic JSON decoding.
+
+Sample results below are run on my dev laptop (MacBoo Pro, 6-core 2.6 Ghz) and JDK 17.
+
+### "Docs Api" (2Kb)
+
+Benchmark that uses example JSON document of 2164 bytes (2.1Kb):
+
+```
+Benchmark                                 Mode  Cnt       Score       Error  Units
+BenchmarkDocsApi.jsonReadAndExtractMost  thrpt    6  135952.402 ± 24056.339  ops/s
+BenchmarkDocsApi.jsonReadAndExtractTiny  thrpt    6  184029.745 ±  9156.137  ops/s
+BenchmarkDocsApi.jsonReadTree            thrpt    6  125507.516 ±  2572.125  ops/s
+BenchmarkDocsApi.jsonScanOnly            thrpt    6  229630.819 ± 13640.572  ops/s
+```
+
+in this case we get average throughputs as follows:
+
+* 230,000 documents (460 MB) per second per core for basic JSON scanning (skipping through tokens)
+* 185,000 documents (370 MB) per second per core when extracting small amounts (2 unrelated subtrees, 5 leaf values)
+* 135,000 documents (270 MB) per second per core when extracting larger amounts (about half the document; dozens of leaf values)
+* 125,000 documents (250 MB) per second per core when building (but not processing) in-memory Tree representation
