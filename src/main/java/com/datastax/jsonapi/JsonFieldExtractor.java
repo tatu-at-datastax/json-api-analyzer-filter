@@ -1,18 +1,19 @@
 package com.datastax.jsonapi;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.core.filter.FilteringParserDelegate;
 import com.fasterxml.jackson.core.filter.TokenFilter;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 /**
  * Main class that handles extraction of JSON field contents from JSON documents,
@@ -42,9 +43,15 @@ public class JsonFieldExtractor {
     }
 
     public static JsonFieldExtractor construct(JsonFactory jsonFactory,
-                                               String commaSeparatedPaths) {
+                                               String commaSeparatedInclusionPaths) {
         return new JsonFieldExtractor(jsonFactory,
-                PathBasedFilterFactory.filterForPaths(commaSeparatedPaths));
+                PathBasedFilterFactory.filterForPaths(commaSeparatedInclusionPaths));
+    }
+
+    public static JsonFieldExtractor construct(JsonFactory jsonFactory,
+                                               List<String> inclusionPaths) {
+        return new JsonFieldExtractor(jsonFactory,
+                PathBasedFilterFactory.filterForPaths(inclusionPaths));
     }
 
     /*

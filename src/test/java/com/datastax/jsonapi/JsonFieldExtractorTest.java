@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,15 +150,15 @@ public class JsonFieldExtractorTest {
             }
         }
 
-        extr = EXTRACTOR_FACTORY.buildExtractor(
-                "products.food.Apple, products.food.Orange ");
+        // Use the buildExtractor that takes pre-split Paths
+        extr = EXTRACTOR_FACTORY.buildExtractor(Arrays.asList("products.food.Apple",
+                "products.food.Orange "));
         try (InputStream in = getClass().getResourceAsStream("/jmh/docsapi-example.json")) {
             try (JsonParser p = extr.extractingParser(in)) {
                 String str = extr._extractAsString(p, 1000);
                 assertThat(str).isEqualTo("apple 0.99 100100010101001 orange 600.01 ");
             }
         }
-
     }
 
     /*
