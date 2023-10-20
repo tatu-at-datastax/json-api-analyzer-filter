@@ -69,15 +69,15 @@ Benchmark that uses example JSON document of 2164 bytes (2.1Kb) and extracts con
 
 ```
 Benchmark                                 Mode  Cnt       Score       Error  Units
-BenchmarkDocsApi.jsonReadAndExtractMost  thrpt    6  135952.402 ± 24056.339  ops/s
-BenchmarkDocsApi.jsonReadAndExtractTiny  thrpt    6  184029.745 ±  9156.137  ops/s
-BenchmarkDocsApi.jsonReadTree            thrpt    6  125507.516 ±  2572.125  ops/s
-BenchmarkDocsApi.jsonScanOnly            thrpt    6  229630.819 ± 13640.572  ops/s
+BenchmarkDocsApi.jsonReadAndExtractMost  thrpt    9  140044.517 ±  5051.514  ops/s
+BenchmarkDocsApi.jsonReadAndExtractTiny  thrpt    9  182548.624 ± 12296.384  ops/s
+BenchmarkDocsApi.jsonReadTree            thrpt    9  124324.194 ±  4962.277  ops/s
+BenchmarkDocsApi.jsonScanOnly            thrpt    9  224189.990 ±  9225.558  ops/s
 ```
 
 in this case we get average throughput numbers as follows:
 
-* 230,000 documents (460 MB) per second per core for basic JSON scanning (skipping through tokens, not accessing values)
-* 185,000 documents (370 MB) per second per core when extracting small amounts (2 unrelated subtrees, 5 leaf values)
-* 135,000 documents (270 MB) per second per core when extracting larger amounts (about half the document; dozens of leaf values)
+* 225,000 documents (450 MB) per second per core for basic JSON scanning (skipping through tokens, not accessing values)
+* 182,500 documents (365 MB) per second per core when extracting small amounts (2 unrelated subtrees, 5 leaf values)
+* 140,000 documents (280 MB) per second per core when extracting larger amounts (about half the document; dozens of leaf values)
 * 125,000 documents (250 MB) per second per core when building (but not processing) in-memory Tree representation (access all leaf values)

@@ -18,7 +18,7 @@ import java.io.InputStream;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark)
 @Fork(value = 3)
-@Measurement(iterations = 2, time = 3)
+@Measurement(iterations = 3, time = 3)
 @Warmup(iterations = 1, time = 3)
 public class BenchmarkDocsApi
 {
