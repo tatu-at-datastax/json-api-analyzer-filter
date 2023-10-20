@@ -17,13 +17,13 @@ The idea is that for content like:
 }  
 ```
 
-would be extract by specifying inclusion paths like:
+we can extract contents by specifying inclusion paths like:
 
 ```
    name, phone.home
 ```
 
-to result in indexable text blob of:
+which results in constructing indexable text blob of:
 
 ```
 Bob Burger 555-123-4567
@@ -35,7 +35,7 @@ and for this specific case, we could do that by:
 JsonFieldExtractorFactory f = JsonFieldExtractorFactory.construct(new ObjectMapper());
 JsonFieldExtractor extr = f.buildExtractor("name, phone.home");
 String json = "..."; // get JSON from somewhere
-String toIndex = extr.extractAsString(json);
+String toIndex = extr.extractAsString(json).get(); // Optional.empty() if not JSON
 
 assertThat(toIndex).isEqualTo("Bob Burger 555-123-4567 "); // note trailing space
 ```
