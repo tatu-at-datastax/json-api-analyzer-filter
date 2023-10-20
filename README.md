@@ -44,7 +44,8 @@ assertThat(toIndex).isEqualTo("Bob Burger 555-123-4567 "); // note trailing spac
 
 Instances of `JsonFeidlExtractorFactory` and `JsonFieldExtractor` are thread-safe and can be shared between threads.
 They should be cached as much as possible: for former a Singleton is enough, and for latter, a size-bound
-Caffeine cache keyed by field definitions is recommended.
+cache (like `Caffeine`) keyed by field definition `String` is recommended; this avoids processing to build token filter
+(which should not be particularly expensive but is not free either).
 
 ## Implementation
 
@@ -63,7 +64,8 @@ Sample results below are run on my dev laptop (MacBoo Pro, 6-core 2.6 Ghz) and J
 
 ### "Docs Api" (2Kb)
 
-Benchmark that uses example JSON document of 2164 bytes (2.1Kb):
+Benchmark that uses example JSON document of 2164 bytes (2.1Kb) and extracts contents as `String`
+(for extraction cases):
 
 ```
 Benchmark                                 Mode  Cnt       Score       Error  Units
@@ -73,9 +75,9 @@ BenchmarkDocsApi.jsonReadTree            thrpt    6  125507.516 ±  2572.125  op
 BenchmarkDocsApi.jsonScanOnly            thrpt    6  229630.819 ± 13640.572  ops/s
 ```
 
-in this case we get average throughputs as follows:
+in this case we get average throughput numbers as follows:
 
-* 230,000 documents (460 MB) per second per core for basic JSON scanning (skipping through tokens)
+* 230,000 documents (460 MB) per second per core for basic JSON scanning (skipping through tokens, not accessing values)
 * 185,000 documents (370 MB) per second per core when extracting small amounts (2 unrelated subtrees, 5 leaf values)
 * 135,000 documents (270 MB) per second per core when extracting larger amounts (about half the document; dozens of leaf values)
-* 125,000 documents (250 MB) per second per core when building (but not processing) in-memory Tree representation
+* 125,000 documents (250 MB) per second per core when building (but not processing) in-memory Tree representation (access all leaf values)
