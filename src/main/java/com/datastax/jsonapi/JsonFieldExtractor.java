@@ -60,6 +60,10 @@ public class JsonFieldExtractor {
     /**********************************************************
      */
 
+    public boolean isEmpty() {
+        return filter == PathBasedFilterFactory.EMPTY_DOC_FILTER;
+    }
+
     public Optional<String> extractAsString(String json) throws IOException {
         if (!_hasJson(json)) {
             return Optional.empty();

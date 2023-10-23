@@ -179,6 +179,29 @@ public class JsonFieldExtractorTest {
 
     /*
     /**********************************************************
+    /* Checking for "isEmpty()" aspects
+    /**********************************************************
+     */
+
+    @Test
+    public void testWhetherExtractorEmpty() throws Exception {
+        // First cases where not empty
+        assertThat(EXTRACTOR_FACTORY.buildExtractor("field").isEmpty()).isFalse();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor("a,b").isEmpty()).isFalse();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor(",b").isEmpty()).isFalse();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor("path.from.root, ").isEmpty()).isFalse();
+
+        // And then empty cases
+        assertThat(EXTRACTOR_FACTORY.buildExtractor("").isEmpty()).isTrue();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor("    ").isEmpty()).isTrue();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor(",").isEmpty()).isTrue();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor(",,,").isEmpty()).isTrue();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor(" , ,  ").isEmpty()).isTrue();
+        assertThat(EXTRACTOR_FACTORY.buildExtractor(" , ,\t").isEmpty()).isTrue();
+    }
+
+    /*
+    /**********************************************************
     /* Helper methods
     /**********************************************************
      */
