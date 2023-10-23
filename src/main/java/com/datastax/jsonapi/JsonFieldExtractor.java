@@ -60,6 +60,12 @@ public class JsonFieldExtractor {
     /**********************************************************
      */
 
+    /**
+     * Method for checking whether extractor is "empty", that is, has empty
+     * inclusion criteria which will extract nothing. Useful in cases where we
+     * either do not accept such extractors, or, alternatively want to optimize
+     * away calls to extraction.
+     */
     public boolean isEmpty() {
         return filter == PathBasedFilterFactory.EMPTY_DOC_FILTER;
     }
