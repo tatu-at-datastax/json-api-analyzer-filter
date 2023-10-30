@@ -178,16 +178,23 @@ public class JsonFieldExtractor {
     }
 
     String _extractAsString(JsonParser p, int jsonLength) throws IOException {
-        StringWriter sw = new StringWriter(estimateResultLength(jsonLength));
+        StringBuilder sb = new StringBuilder(estimateResultLength(jsonLength));
         try (JsonParser fp = new FilteringParserDelegate(p, filter,
                 TokenFilter.Inclusion.ONLY_INCLUDE_ALL, true)) {
             while (fp.nextToken() != null) {
                 if (includeToken(fp.currentTokenId())) {
-                    sw.append(fp.getText()).append(' ');
+                    String text = fp.getText();
+                    if (text.isEmpty()) {
+                        continue;
+                    }
+                    if (!sb.isEmpty()) {
+                        sb.append(' ');
+                    }
+                    sb.append(text);
                 }
             }
         }
-        return sw.toString();
+        return sb.toString();
     }
 
     private byte[] _extractAsBytes(JsonParser p, int jsonLength) throws IOException {
