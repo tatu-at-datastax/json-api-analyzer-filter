@@ -187,7 +187,7 @@ public class JsonFieldExtractor {
                     if (text.isEmpty()) {
                         continue;
                     }
-                    if (!sb.isEmpty()) {
+                    if (sb.length() > 0) {
                         sb.append(' ');
                     }
                     sb.append(text);
